@@ -26,6 +26,11 @@ separate_taxonomy <- function(df_location){
                                               "\\U\\1\\L\\2", . , perl=TRUE)) %>% 
                              mutate_all(~gsub("\\.", "", . , perl=TRUE)) 
                      
+                     # make raw file name
+                     file_name <- sapply(strsplit(as.character(df_location), split="/") , function(x) x[5])
+                     country_nm <- sapply(strsplit(as.character(file_name), split="_") , function(x) x[1])
+  
+                     
                      # define what taxonomic columns might be named        
                      tax_class <- c("kingdom", "phylum", "class", "order", "family", 
                                     "genus", "species", "genus_species", "authority",
@@ -55,7 +60,8 @@ separate_taxonomy <- function(df_location){
                                     genus_species = gsub("\\s\\ss", " ", genus_species, perl=TRUE),
                                     genus_species = gsub("\\s\\s", " ", genus_species, perl=TRUE),
                                     genus_species = gsub("\\ssp$", "", genus_species, perl=TRUE)
-                                    )
+                                    ) %>% 
+                             mutate(raw_country = country_nm)
                      
                      # return df_2 
                      return(df_2)       
@@ -113,9 +119,9 @@ get_accepted_taxonomy <- function(taxa_name){
                                                              genus_species = "species not found")
                              
                              } else { 
-                             xtra_cols <- c(#"rank", "status", "matchtype", "confidence", "synonym", "acceptedusagekey",
-                                             "kingdomkey", "phylumkey", "classkey", "orderkey", "specieskey",
-                                             "note", "familykey", "genuskey")
+                             i_xtra_cols <- c(#"rank", "status", "matchtype", "confidence", "synonym", "acceptedusagekey",
+                                              "kingdomkey", "phylumkey", "classkey", "orderkey", "specieskey",
+                                              "note", "familykey", "genuskey")
                                
                              # puts ID info into one dataframe
                              tax_id <- map_df(id, ~as.data.frame(.x), .id="user_supplied_name")
@@ -153,10 +159,13 @@ get_accepted_taxonomy <- function(taxa_name){
                                            dplyr::filter(xor(any(rank %in% c("species", "subspecies", "form", "family")), 
                                                              rank == "genus")) %>% # filter rank to species if both genus and species
                                            mutate_if(is.logical, as.character) %>% 
-                                           select(-one_of(xtra_cols)) 
+                                           select(-one_of(i_xtra_cols)) 
                              
                                  id_acc <- if (nrow(id_acc)>1) {id_acc[1,]} else {id_acc} # if more than one row, select first row
- 
+                                 
+                                 id_acc <- if (!("genus" %in% names(id_acc))) {id_acc %>% mutate(genus = stringr::word(canonicalname, 1))
+                                           } else {id_acc} # make sure there's a genus column
+                                 
                                  # make df of all taxonomic info from GBIF
                                  tax_gbif <- id_acc %>%
                                              # get authority
@@ -192,8 +201,8 @@ get_accepted_taxonomy <- function(taxa_name){
 #'
 #' @examples
 get_more_info <- function(taxa_name){
-                 id <- gnr_resolve(names = taxa_name, data_source_ids=c(1,2,3,4,8,12,152,168,169),
-                                   canonical=TRUE, best_match_only=TRUE)  
+                 id <- gnr_resolve(sci = taxa_name, data_source_ids = c(1,2,3,4,8,12,152,168,169),
+                                   canonical = TRUE, best_match_only = TRUE)  
                  
                  # deal with cases where species name not found
                  id_res <- if (nrow(id) == 0) {data.frame(user_supplied_name = taxa_name,
@@ -471,7 +480,7 @@ coalesce_manual <- function(df) {
                    # test whether there are multiple rows
                    if(nrow(df) == 1){coal_manual <- df %>% 
                                                     mutate_at(vars(taxon_id, genus_species, plant_feeding, 
-                                                                   intentional_release, ever_introduced_anywhere,
+                                                                   # intentional_release, ever_introduced_anywhere,
                                                                    host_type, established_indoors_or_outdoors, host_group, 
                                                                    phagy, pest_type, ecozone, phagy_main, 
                                                                    current_distribution_cosmopolitan_, feeding_type, feeding_main,
@@ -484,7 +493,7 @@ coalesce_manual <- function(df) {
                    } else {
                     # coalesce non-origin columns
                     coal_other <- df %>% 
-                                  select(taxon_id, genus_species, plant_feeding, intentional_release, ever_introduced_anywhere,
+                                  select(taxon_id, genus_species, plant_feeding, # intentional_release, ever_introduced_anywhere,
                                          host_type, established_indoors_or_outdoors, host_group, phagy, pest_type, 
                                          ecozone, current_distribution_cosmopolitan_, phagy_main, feeding_type, feeding_main,
                                          confirmed_establishment) %>% 
@@ -507,10 +516,11 @@ coalesce_manual <- function(df) {
                     coal_manual <- full_join(coal_other, coal_origin) %>% 
                                    select(genus_species, origin_Nearctic, origin_Neotropic, origin_European_Palearctic,
                                           origin_Asian_Palearctic, origin_Indomalaya, origin_Afrotropic,
-                                          origin_Australasia, origin_Oceania, plant_feeding, intentional_release, 
-                                          ever_introduced_anywhere, everything()) %>% 
+                                          origin_Australasia, origin_Oceania, plant_feeding,
+                                           #intentional_release, ever_introduced_anywhere, 
+                                          everything()) %>% 
                                    mutate_at(vars(taxon_id, genus_species, plant_feeding, 
-                                                  intentional_release, ever_introduced_anywhere,
+                                                  # intentional_release, ever_introduced_anywhere,
                                                   host_type, established_indoors_or_outdoors, host_group, 
                                                   phagy, pest_type, ecozone, phagy_main, 
                                                   current_distribution_cosmopolitan_, feeding_type, feeding_main,
