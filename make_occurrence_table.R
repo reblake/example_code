@@ -72,7 +72,7 @@ df_occurr <- occurr_list %>%
                     year = gsub("\\s", "", year, perl=TRUE)) %>% 
              # clean up intentional release column
              mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-                                          ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
+                                          ifelse(intentional_release %in% c("1", "I","Y"), "Yes", intentional_release))) %>% 
              # add country codes for country and origin columns
              mutate(country_code = countrycode(country, "country.name", "iso3n", warn = TRUE),
                     origin_code = countrycode(origin, "country.name", "iso3n", warn = TRUE)) %>% 
