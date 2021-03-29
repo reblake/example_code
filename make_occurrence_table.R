@@ -93,6 +93,10 @@ occurr_df <- df_occurr %>%
              select(taxon_id, everything()) %>% # make taxon_id column the first column
              dplyr::arrange(taxon_id) # order by taxon_id
 
+# take out duplicates in the genus_species/region columns
+# want to unify/coalesce to earliest year, ignoring NAs
+# intentional release, prioritize YES
+# 
 
 #####################################
 ### Write file                    ###
