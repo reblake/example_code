@@ -91,8 +91,9 @@ pf_sp <- pf_sp %>% pull()
 # coalesce_by_column <- function(df) {
 #                       return(dplyr::coalesce(!!! as.list(df)))
 #                       }
-
-# make attribute table
+#############################
+# make attribute table by user_supplied_name but using new manual coalesce custom function
+#############################
 df_attrib_o <- df_attrib %>% 
                left_join(tax_cols, by = "user_supplied_name") %>% # merge in taxonomic info
                left_join(o_corr_table) %>%  # merge in origin correspondence table
@@ -114,24 +115,26 @@ df_attrib_o <- df_attrib %>%
                       plant_feeding = ifelse((order == "Diptera" & family == "Drosophilidae" & user_supplied_name %in% pf_sp), "Y", plant_feeding)
                       ) %>% 
                # clean up intentional release column
-               mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-                                            ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
+               # mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
+               #                              ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
                # add column for whether species every introduced anywhere in world
-               group_by(user_supplied_name) %>% 
-               mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
-                                                  ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
-               ungroup() %>% 
+               # group_by(user_supplied_name) %>% 
+               # mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
+               #                                    ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
+               # ungroup() %>% 
+               # remove irrelevant columns
                select(-origin, -country_nm, -nz_region, -order, -family, -genus) %>% 
-               # coalesce rows to one per species
+               # coalesce rows to one per user_supplied_name
                group_split(user_supplied_name) %>% 
                map(~coalesce_manual(.x)) %>%
                bind_rows() %>% 
                select(-genus_species) %>% 
                # arrange rows and columns
                arrange(user_supplied_name) %>% 
-               select(taxon_id, user_supplied_name, plant_feeding, 
-                      origin_Nearctic, origin_Neotropic, origin_European_Palearctic, origin_Asian_Palearctic, origin_Indomalaya, 
-                      origin_Afrotropic, origin_Australasia, origin_Oceania, everything())
+               select(#taxon_id, 
+                      user_supplied_name, plant_feeding, 
+                      origin_Nearctic, origin_Neotropic, origin_European_Palearctic, origin_Asian_Palearctic, 
+                      origin_Indomalaya, origin_Afrotropic, origin_Australasia, origin_Oceania, everything())
 
 
 #####################################
@@ -142,7 +145,7 @@ readr::write_csv(df_attrib_o, "nfs_data/data/clean_data/attribute_table.csv")
 
 
 ########################################################################
-### Code to filter to unique GBIF genus_species, and do manual coalesce
+### Code to filter to unique GBIF genus_species, and do manual coalesce using new custom function
 ########################################################################
 
 
@@ -167,36 +170,33 @@ df_attrib_gbif <- df_attrib %>%
                          plant_feeding = ifelse((order == "Diptera" & family == "Drosophilidae" & user_supplied_name %in% pf_sp), "Y", plant_feeding)
                          ) %>% 
                   # clean up intentional release column
-                  mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-                                               ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
+                  # mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
+                  #                              ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
                   # add column for whether species every introduced anywhere in world
-                  group_by(user_supplied_name) %>% 
-                  mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
-                                                    ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
-                  ungroup() %>% 
-                  select(-origin, -country_nm, -nz_region, -user_supplied_name, -order, -family, -genus, -notes) %>% 
+                  # group_by(user_supplied_name) %>% 
+                  # mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
+                  #                                   ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
+                  # ungroup() %>% 
+                  # removed irrelevant columns
+                  select(-origin, -country_nm, -nz_region, -user_supplied_name, -order, -family, -genus, -notes,
+                         -intentional_release) %>% 
                   # set column types
                   mutate_at(vars(origin_Nearctic, origin_Neotropic, origin_European_Palearctic,
                                  origin_Asian_Palearctic, origin_Indomalaya, origin_Afrotropic,
                                  origin_Australasia, origin_Oceania),
-                            list(as.numeric)) %>%                     
+                            list(as.numeric)) %>%         
                   # coalesce rows to one per GBIF genus_species
-                  # group_by(genus_species) %>%
-                  # summarize_all(coalesce_manual) %>% 
-                  # ungroup() %>%    
-  
-  
                   group_split(genus_species) %>% 
                   map(~coalesce_manual(.x)) %>%
                   bind_rows() %>% 
-
-
                   # arrange rows and columns
                   arrange(genus_species) %>% 
-                  select(taxon_id, genus_species,
+                  select(-taxon_id, 
+                         genus_species,
                          origin_Nearctic, origin_Neotropic, origin_European_Palearctic, origin_Asian_Palearctic, 
                          origin_Indomalaya, origin_Afrotropic, origin_Australasia, origin_Oceania, plant_feeding, 
-                         intentional_release, ever_introduced_anywhere, everything())
+                         #intentional_release, ever_introduced_anywhere, 
+                         everything())
 
 
 
