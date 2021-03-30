@@ -72,7 +72,7 @@ df_occurr <- occurr_list %>%
                     year = gsub("\\s", "", year, perl=TRUE)) %>% 
              # clean up intentional release column
              mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-                                          ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
+                                          ifelse(intentional_release %in% c("1", "I", "Y"), "Yes", intentional_release))) %>% 
              mutate(intentional_release = ifelse(intentional_release %in% c("Na"), NA_character_, intentional_release)) %>% 
              # clean up ecozone
              mutate(ecozone = ifelse(ecozone %in% c("Na"), NA_character_, ecozone)) %>% 
