@@ -546,18 +546,43 @@ coalesce_manual <- function(df) {
 #' @export
 #'
 #' @examples
-coalesce_occur <- function(df) {                         
-                  # take out duplicates in the genus_species/region columns              
-                  no_dup <- df %>% 
-                            select(-user_supplied_name) %>% 
-                    
-                    
-                    
-      
-# want to unify/coalesce to earliest year, ignoring NAs
-# intentional release, prioritize YES               
-                            
-                             
+coalesce_occur <- function(df) {  
+                  # test whether there are multiple rows
+                  if(nrow(df) == 1) {no_dup <- df %>% 
+                                               select(genus_species, year, region, country, origin, 
+                                                      host_type, ecozone, intentional_release, 
+                                                      established_indoors_or_outdoors, confirmed_establishment, eradicated,
+                                                      present_status) %>% 
+                                               mutate_at(vars(genus_species, region, country, 
+                                                              host_type, origin, ecozone, intentional_release,
+                                                              established_indoors_or_outdoors, confirmed_establishment, 
+                                                              eradicated, present_status), 
+                                                         list(as.character)) %>% 
+                                               mutate_at(vars(year), list(as.numeric))
+                     } else {
+                       
+                       # coalesce intentional release column
+                       # ir <- df %>% 
+                       #       select(genus_species, region, intentional_release) %>% 
+                       #       group_by(genus_species, region) %>% 
+                       #       summarize_all( ~ ifelse(intentional_release == "Yes", "Yes", intentional_release)) %>% 
+                       #       ungroup()
+                       # take out duplicates in the genus_species/region columns; coalesce to earliest year              
+                       no_dup <- df %>% 
+                                 summarize_all(DescTools::Mode, na.rm = TRUE) %>% 
+                                 select(genus_species, year, region, country, origin, 
+                                        host_type, ecozone, intentional_release, 
+                                        established_indoors_or_outdoors, confirmed_establishment, eradicated,
+                                        present_status) %>% 
+                                 mutate_at(vars(genus_species, region, country, 
+                                                host_type, origin, ecozone, intentional_release,
+                                                established_indoors_or_outdoors, confirmed_establishment, 
+                                                eradicated, present_status),
+                                           list(as.character)) %>% 
+                                 mutate_at(vars(year), list(as.numeric))
+                       
+                     }
+                  return(no_dup)
                   }        
                        
                        
