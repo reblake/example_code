@@ -5,7 +5,7 @@
 ####################################################################
 
 # Load packages needed for this script
-library(tidyverse) ; library(readxl) ; library(purrr) ; library(countrycode)
+library(tidyverse) ; library(readxl) ; library(purrr) ; library(countrycode) ; library(DescTools)
 
 # source the custom functions if they aren't in your R environment
 #source("nfs_data/custom_taxonomy_funcs.R")
@@ -96,7 +96,7 @@ tax_table <- read.csv("nfs_data/data/clean_data/taxonomy_table.csv", stringsAsFa
 
 # make final occurrence dataframe
 occurr_df <- df_occurr %>%
-             mutate_all(~gsub("(*UCP)\\s\\+|\\W+$", "", . , perl=TRUE)) %>%  # remove rogue white spaces
+             mutate_all(~gsub("(*UCP)\\s\\+|\\W+$", "", . , perl = TRUE)) %>%  # remove rogue white spaces
              dplyr::rename(user_supplied_name = genus_species) %>% # have to rename genus_species to user_supplied_name so matches are correct
              dplyr::left_join(y = select(tax_table, c(user_supplied_name, taxon_id, genus_species)),
                               by = "user_supplied_name") %>% # join in the taxonomy info
@@ -106,19 +106,16 @@ occurr_df <- df_occurr %>%
 
 
 occurr_df2 <- occurr_df %>% 
-              select(user_supplied_name, genus_species, year, region, country, country_code, 
-                     origin, origin_code, host_type, ecozone, intentional_release, 
-                     established_indoors_or_outdoors, confirmed_establishment, eradicated,
-                     present_status) %>%
+              # remove ">" and other characters from year column
+              mutate(year = gsub("\\D", "", year, perl = TRUE)) %>% 
               # take out duplicates in the genus_species/region columns
               group_split(genus_species, region) %>% 
               map(~coalesce_occur(.x)) %>%
               bind_rows() 
               
-# take out duplicates in the genus_species/region columns
-# want to unify/coalesce to earliest year, ignoring NAs
-# intentional release, prioritize YES
-# 
+##### NOTE: there were no cases where there were different entries for intentional release in a
+##### given genus_species/region combo
+
 
 #####################################
 ### Write file                    ###
