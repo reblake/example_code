@@ -537,10 +537,28 @@ coalesce_manual <- function(df) {
                    }
 
                          
-                         
-                         
-                         
-                         
+#######################################################
+#' Title: function to manually coalesce rows in occurrence table   
+#'
+#' @param df 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+coalesce_occur <- function(df) {                         
+                  # take out duplicates in the genus_species/region columns              
+                  no_dup <- df %>% 
+                            select(-user_supplied_name) %>% 
+                    
+                    
+                    
+      
+# want to unify/coalesce to earliest year, ignoring NAs
+# intentional release, prioritize YES               
+                            
+                             
+                  }        
                        
                        
                        
