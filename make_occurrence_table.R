@@ -68,11 +68,22 @@ df_occurr <- occurr_list %>%
                     genus_species = gsub("Mycetophila\xa0marginepunctata", "Mycetophila marginepunctata", genus_species),
                     ) %>%         
              # clean up year column
-             mutate(year = ifelse(year == "N/A", NA_character_, year),
+             mutate(year = ifelse(year %in% c("N/A", "Na"), NA_character_, year),
                     year = gsub("\\s", "", year, perl=TRUE)) %>% 
              # clean up intentional release column
              mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
                                           ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
+             mutate(intentional_release = ifelse(intentional_release %in% c("Na"), NA_character_, intentional_release)) %>% 
+             # clean up ecozone
+             mutate(ecozone = ifelse(ecozone %in% c("Na"), NA_character_, ecozone)) %>% 
+             # clean up eradicated
+             mutate(eradicated = ifelse(eradicated %in% c("Na"), NA_character_, eradicated)) %>% 
+             # clean up origin column
+             mutate(origin = ifelse(origin %in% c("Na"), NA_character_, origin)) %>%
+             # clean up confirmed establishment
+             mutate(confirmed_establishment = ifelse(confirmed_establishment %in% c("Na"), NA_character_, confirmed_establishment)) %>% 
+             # clean up host type
+             mutate(host_type = str_to_lower(host_type)) %>% 
              # add country codes for country and origin columns
              mutate(country_code = countrycode(country, "country.name", "iso3n", warn = TRUE),
                     origin_code = countrycode(origin, "country.name", "iso3n", warn = TRUE)) %>% 
@@ -93,6 +104,17 @@ occurr_df <- df_occurr %>%
              select(taxon_id, everything()) %>% # make taxon_id column the first column
              dplyr::arrange(taxon_id) # order by taxon_id
 
+
+occurr_df2 <- occurr_df %>% 
+              select(user_supplied_name, genus_species, year, region, country, country_code, 
+                     origin, origin_code, host_type, ecozone, intentional_release, 
+                     established_indoors_or_outdoors, confirmed_establishment, eradicated,
+                     present_status) %>%
+              # take out duplicates in the genus_species/region columns
+              group_split(genus_species, region) %>% 
+              map(~coalesce_occur(.x)) %>%
+              bind_rows() 
+              
 # take out duplicates in the genus_species/region columns
 # want to unify/coalesce to earliest year, ignoring NAs
 # intentional release, prioritize YES
@@ -102,7 +124,7 @@ occurr_df <- df_occurr %>%
 ### Write file                    ###
 #####################################
 # write the clean occurrence table to a CSV file
-readr::write_csv(occurr_df, "nfs_data/data/clean_data/occurrence_table.csv")
+readr::write_csv(occurr_df2, "nfs_data/data/clean_data/occurrence_table.csv")
 
 
 
