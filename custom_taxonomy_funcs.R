@@ -561,16 +561,22 @@ coalesce_occur <- function(df) {
                                                mutate_at(vars(year), list(as.numeric))
                      } else {
                        
-                       # coalesce intentional release column
-                       # ir <- df %>% 
-                       #       select(genus_species, region, intentional_release) %>% 
-                       #       group_by(genus_species, region) %>% 
-                       #       summarize_all( ~ ifelse(intentional_release == "Yes", "Yes", intentional_release)) %>% 
-                       #       ungroup()
-                       # take out duplicates in the genus_species/region columns; coalesce to earliest year              
-                       no_dup <- df %>% 
+                       # coalesce to earliest year
+                       yr <- df %>%
+                             select(genus_species, region, year) %>%
+                             group_by(genus_species, region) %>%
+                             # summarize_all( ~ ifelse(nrow(year)>1 , , year)) %>%
+                             filter(rank(year, ties.method = "first") == 1) %>% 
+                             ungroup() %>% 
+                             mutate_at(vars(year), list(as.numeric))
+                       
+                       # take out duplicates in the genus_species/region columns               
+                       gsr_dp <- df %>% 
+                                 select(-year) %>% 
+                                 group_by(genus_species, region) %>% 
                                  summarize_all(DescTools::Mode, na.rm = TRUE) %>% 
-                                 select(genus_species, year, region, country, origin, 
+                                 ungroup() %>% 
+                                 select(genus_species, region, country, origin, 
                                         host_type, ecozone, intentional_release, 
                                         established_indoors_or_outdoors, confirmed_establishment, eradicated,
                                         present_status) %>% 
@@ -578,9 +584,16 @@ coalesce_occur <- function(df) {
                                                 host_type, origin, ecozone, intentional_release,
                                                 established_indoors_or_outdoors, confirmed_establishment, 
                                                 eradicated, present_status),
-                                           list(as.character)) %>% 
-                                 mutate_at(vars(year), list(as.numeric))
-                       
+                                           list(as.character)) 
+                                                   
+                       # put year and everything else back together
+                       no_dup <- gsr_dp %>% 
+                                 full_join(yr) %>% 
+                                 select(genus_species, year, region, country, origin, 
+                                        host_type, ecozone, intentional_release, 
+                                        established_indoors_or_outdoors, confirmed_establishment, eradicated,
+                                        present_status)
+                          
                      }
                   return(no_dup)
                   }        
