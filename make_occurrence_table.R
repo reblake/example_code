@@ -70,14 +70,15 @@ df_occurr <- occurr_list %>%
              # clean up year column
              mutate(year = ifelse(year %in% c("N/A", "Na"), NA_character_, year),
                     year = gsub("\\s", "", year, perl=TRUE)) %>% 
+             # clean up eradicated
+             mutate(eradicated = ifelse(eradicated %in% c("Na"), NA_character_, eradicated),
+                    eradicated = ifelse(intentional_release == "Eradicated", "Yes", eradicated)) %>% 
              # clean up intentional release column
-             mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
+             mutate(intentional_release = ifelse(intentional_release %in% c("N", "Eradicated"), "No", 
                                           ifelse(intentional_release %in% c("1", "I", "Y"), "Yes", intentional_release))) %>% 
              mutate(intentional_release = ifelse(intentional_release %in% c("Na"), NA_character_, intentional_release)) %>% 
              # clean up ecozone
              mutate(ecozone = ifelse(ecozone %in% c("Na"), NA_character_, ecozone)) %>% 
-             # clean up eradicated
-             mutate(eradicated = ifelse(eradicated %in% c("Na"), NA_character_, eradicated)) %>% 
              # clean up origin column
              mutate(origin = ifelse(origin %in% c("Na"), NA_character_, origin)) %>%
              # clean up confirmed establishment
