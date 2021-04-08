@@ -1,3 +1,5 @@
+library(tidyverse)
+
 # Comparing Rebecca's code
 
 rt_estab <- read.csv("nfs_data/data/clean_data/dated_tax_files/Establishment2021April01.csv")
@@ -11,11 +13,14 @@ combo <- occurr_gs %>%
                 intentional_release.x, intentional_release.y, everything())
 View(combo)
 
-# tax_table <- read.csv("nfs_data/data/clean_data/taxonomy_table.csv", stringsAsFactors=F)  # read in the taxonomy table
+tax_table <- read.csv("nfs_data/data/clean_data/taxonomy_table.csv", stringsAsFactors=F)  # read in the taxonomy table
 
 est <- occurr_gs %>% 
        left_join(tax_table)
 
+# bring in the manual fixes file
+sal_taxa <- read_csv("nfs_data/data/raw_data/taxonomic_reference/genus_only_resolution_FIXED.csv", trim_ws = TRUE,
+                     col_types = cols(up_to_date_name = col_character())) 
 
 ##### Rebecca's Note: Several checks were completed at this stage
 nr <- filter(est, is.na(rank)) # check for cases with no rank
@@ -55,15 +60,36 @@ o2
 ######################################
 
 # editing the tax table here so GBIF info doesn't change again
-tax_table <- tax_table %>% 
-             mutate(family = ifelse(user_supplied_name == "Polistes dominua" & family == "Eumenidae", "Vespidae", family)) %>%  
-            # mutate(family = ifelse(family == "Eumenidae", "Vespidae", family)) %>% 
-             mutate(rank = ifelse(user_supplied_name == "Listronotus silvestris"))
+tax_table2 <- tax_table %>% 
+              mutate(family = ifelse(user_supplied_name == "Polistes dominua" & family == "Eumenidae", "Vespidae", family)) %>%  
+              mutate(family = ifelse(family == "Eumenidae", "Vespidae", family)) %>% 
+              mutate(rank = ifelse(user_supplied_name == "Listronotus silvestris", "species", rank)) %>% 
+              mutate(order = ifelse(user_supplied_name == "Vazuezitocoris andinus", "Hemiptera", order),
+                     family = ifelse(user_supplied_name == "Vazuezitocoris andinus", "Coreidae", family)) %>% 
+              mutate(order = ifelse(user_supplied_name == "Labia annulata", "Dermaptera", order),
+                     family = ifelse(user_supplied_name == "Labia annulata", "Spongiphoridae", family),
+                     genus = ifelse(user_supplied_name == "Labia annulata", "Labia", genus),
+                     species = ifelse(user_supplied_name == "Labia annulata", "Labia annulata", species), 
+                     genus_species = ifelse(user_supplied_name == "Labia annulata", "Labia annulata", genus_species),
+                     status = ifelse(user_supplied_name == "Labia annulata", NA_character_, status),
+                     matchtype = ifelse(user_supplied_name == "Labia annulata", NA_character_, matchtype),
+                     usagekey = ifelse(user_supplied_name == "Labia annulata", NA_character_, usagekey),
+                     taxonomy_system = ifelse(user_supplied_name == "Labia annulata", NA_character_, taxonomy_system),
+                     taxonomic_authority = ifelse(user_supplied_name == "Labia annulata", NA_character_, taxonomic_authority)) %>% 
+              mutate(order = ifelse(user_supplied_name == "Lema bilineata", "Coleoptera", order),
+                     family = ifelse(user_supplied_name == "Lema bilineata", "Chrysomelidae", family),
+                     genus = ifelse(user_supplied_name == "Lema bilineata", "Lema", genus),
+                     species = ifelse(user_supplied_name == "Lema bilineata", "Lema bilineata", species),
+                     genus_species = ifelse(user_supplied_name == "Lema bilineata", "Lema bilineata", genus_species),
+                     status =  ifelse(user_supplied_name == "Lema bilineata", NA_character_, status),
+                     matchtype = ifelse(user_supplied_name == "Lema bilineata", NA_character_, matchtype),
+                     usagekey = ifelse(user_supplied_name == "Lema bilineata", NA_character_, usagekey),
+                     taxonomy_system = ifelse(user_supplied_name == "Lema bilineata", NA_character_, taxonomy_system),
+                     taxonomic_authority = ifelse(user_supplied_name == "Lema bilineata", NA_character_, taxonomic_authority)) 
 
-
-             
 # write the clean taxonomy table to a CSV file
-readr::write_csv(tax_table, "nfs_data/data/clean_data/taxonomy_table.csv")
+readr::write_csv(tax_table2, "nfs_data/data/clean_data/taxonomy_table.csv")
+
 
 
 
