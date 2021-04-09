@@ -85,7 +85,18 @@ tax_table2 <- tax_table %>%
                      matchtype = ifelse(user_supplied_name == "Lema bilineata", NA_character_, matchtype),
                      usagekey = ifelse(user_supplied_name == "Lema bilineata", NA_character_, usagekey),
                      taxonomy_system = ifelse(user_supplied_name == "Lema bilineata", NA_character_, taxonomy_system),
-                     taxonomic_authority = ifelse(user_supplied_name == "Lema bilineata", NA_character_, taxonomic_authority)) 
+                     taxonomic_authority = ifelse(user_supplied_name == "Lema bilineata", NA_character_, taxonomic_authority)) %>% 
+             mutate(order = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "Coleoptera", order),
+                    family = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "Curculionidae", family),
+                    genus = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "Mecinus ", genus),
+                    species = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "Mecinus pascuorum", species),
+                    genus_species = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "Mecinus pascuorum", genus_species),
+                    synonym = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), "TRUE", synonym),
+                    status =  ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, status),
+                    matchtype = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, matchtype),
+                    usagekey = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, usagekey),
+                    taxonomy_system = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, taxonomy_system),
+                    taxonomic_authority = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, taxonomic_authority))
 
 # write the clean taxonomy table to a CSV file
 readr::write_csv(tax_table2, "nfs_data/data/clean_data/taxonomy_table.csv")

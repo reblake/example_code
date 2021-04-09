@@ -305,7 +305,8 @@ tax_combo <- dplyr::filter(tax_acc, rank %in% c("species", "subspecies")) %>% # 
                        taxonomic_authority) %>% # = ifelse(is.na(taxonomic_authority.y), taxonomic_authority.x, taxonomic_authority.y)) %>% 
              # a bit more cleaning from Rebecca Turner
              mutate(family = ifelse(family %in% c("Rutelidae","Melolonthidae", "Dynastidae"), "Scarabaeidae", family),
-                    family = ifelse(genus == "Dermestes", "Dermestidae", family)) %>% 
+                    family = ifelse(genus == "Dermestes", "Dermestidae", family),
+                    family = ifelse(family == "Eumenidae", "Vespidae", family)) %>% 
              dplyr::filter(!(is.na(user_supplied_name))) # remove blank rows
 
 # subset remaining manual fixes for those user supplied names that are in tax_combo to get rows that need to be replaced
@@ -334,7 +335,7 @@ tax_final <- tax_combo %>%
                     class = ifelse(is.na(class), "Insecta", class),
                     genus_species = ifelse(genus_species == "species not found", NA_character_, genus_species)) %>% 
              mutate(genus = ifelse(is.na(genus), word(genus_species, 1), genus),
-                    species = ifelse(is.na(species), word(genus_species, 2), species)) %>% 
+                    species = ifelse(is.na(species), genus_species, species)) %>% 
              arrange(user_supplied_name) %>% 
              # add the unique ID column after all unique species are in one dataframe
              tibble::rowid_to_column("taxon_id")
