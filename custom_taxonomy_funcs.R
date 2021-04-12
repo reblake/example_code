@@ -24,7 +24,8 @@ separate_taxonomy <- function(df_location){
                              select_all(tolower) %>%  # make all column names lower case
                              mutate_all(~gsub("\\b([[:upper:]])([[:upper:]]+)",
                                               "\\U\\1\\L\\2", . , perl=TRUE)) %>% 
-                             mutate_all(~gsub("\\.", "", . , perl=TRUE)) 
+                             mutate_all(~gsub("\\.", "", . , perl=TRUE)) %>% 
+                             mutate_all(~gsub("[[:space:]]", " ", .)) # replace weird white spaces with the ordinary space
                      
                      # make raw file name
                      file_name <- sapply(strsplit(as.character(df_location), split="/") , function(x) x[5])
@@ -272,7 +273,8 @@ separate_occurrence <- function(df_location){
                                select_all(~gsub("\\s+|\\.", "_", .)) %>%  
                                select_all(tolower) %>%  # make all column names lower case
                                mutate_all(~gsub("\\b([[:upper:]])([[:upper:]]+)",
-                                                "\\U\\1\\L\\2", . , perl=TRUE))
+                                                "\\U\\1\\L\\2", . , perl=TRUE)) %>% 
+                               mutate_all(~gsub("[[:space:]]", " ", .)) # replace weird spaces with ordinary space
                        
                        # define region
                        file_name <- sapply(strsplit(as.character(df_location), split="/") , function(x) x[5])
@@ -344,7 +346,8 @@ separate_attributes <- function(df_location){
                                select_all(~gsub("\\s+|\\.", "_", .)) %>%  
                                select_all(tolower) %>%  # make all column names lower case
                                mutate_all(~gsub("\\b([[:upper:]])([[:upper:]]+)",
-                                                "\\U\\1\\L\\2", . , perl=TRUE))
+                                                "\\U\\1\\L\\2", . , perl=TRUE)) %>% 
+                               mutate_all(~gsub("[[:space:]]", " ", .)) # replace weird space with ordinary space
   
                        # define region
                        file_name <- sapply(strsplit(as.character(df_location), split="/") , function(x) x[5])
