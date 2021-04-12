@@ -21,7 +21,7 @@ file.info(tables, extra_cols = FALSE)[,c(1,5)]
 ```
 
 ## Reason for last update:
-Updates to the "fixed" file to correct family names differently assigned by different databases.  Re-ran all `make_XXX_table.R` scripts to update tables.  
+Updates to raw country files and the "fixed" file to correct family names differently assigned by different databases.  Re-ran all `make_XXX_table.R` scripts to update tables.  Added a second taxonomy table, with specific new taxonomy for Coleoptera and Lepidoptera.  
 
 ## Taxonomic Database Citations
 ```{r citations, echo=FALSE}
@@ -30,11 +30,13 @@ gbif_access_date <- stringr::str_extract(ctime1, "^.{10}")
 access_year <- stringr::str_extract(ctime1, "^.{4}")
 ```
 
+### GBIF
 ```{r gbif, echo=FALSE, results='asis'}
-cat(paste0("GBIF Secretariat ", access_year,". GBIF Backbone Taxonomy. Checklist dataset https://doi.org/10.15468/39omei accessed via GBIF.org on ",
+cat(paste0("GBIF Secretariat. 2019. GBIF Backbone Taxonomy. Checklist dataset https://doi.org/10.15468/39omei accessed via GBIF.org on ",
            gbif_access_date,"."))
 ```
 
+### Other databases
 ```{r other_databases, echo=FALSE}
 db_list <- c("Catalogue of Life", "Wikispecies", "ITIS", "NCBI", "The Interim Register of Marine and Nonmarine Genera", "	Encyclopedia of Life",
              "Aphid Species File", "Index to Organism Names", "uBio NameBank")
@@ -54,55 +56,60 @@ dir(path="nfs_data/data/raw_data/raw_by_country", pattern='*.xlsx')
 Cleaning scripts are located on SESYNC GitLab in [example_code repository](https://gitlab.sesync.org/insectinvasions/example_code)
 
 * custom_taxonomy_funcs.R
+    - stores custom functions used in cleaning insect data
 * make_taxonomy_table.R
+    - code to make the clean taxonomy table with GBIF as primary authority (see databases above)
 * make_occurrence_table.R
+    - code to make the clean occurrence table with data from raw files
 * make_attribute_table.R
+    - code to make the clean attribute table with data from raw files and other sources
+* make_tax_table_Col_Lep.R
+    - code to make clean taxonomy table with 
 
 ## Cleaned Data Tables
 Tables are stored on the shared data directory at SESYNC (`/nfs/insectinvasions-data` or [files.sesync.org](files.sesync.org)).  
 These data tables are the outputs of the cleaning scripts.  
 
-* taxonomy_table.csv
+- **taxonomy_table.csv**
+    - created by `make_taxonomy_table.R ` script; 1 unique record per taxonomic entity (species, genus, family, etc.) in the raw files
 * occurrence_table.csv
+    - created by `make_occurrence_table.R` script; 1 unique record per region-taxonomic entity combination
 * attribute_table.csv
+    - created by `make_attribute_table.R` script; 1 unique record per taxonomic entity in the raw files
 * attribute_table_gbif.csv
+    - created by `make_attribute_table.R` script;  1 unique record per GBIF taxonomic entity 
+* taxonomy_table_cole_lep.csv
+    - created by `make_tax_table_Col_Lep.R` script; 1 unique record per taxonomic entity in raw files; other authorities used for taxonomy, especially of family names, in the Coleoptera and Lepidoptera
 
 ## Summary of data cleaning/table creation methods
-1. Read in raw data from excel files for each region/country/area of interest using custom separate_taxonomy() function.  This 
-function also cleans column names, and largely cleans up inconsistencies in species names.  The output is a dataframe.
+1. Read in raw data from excel files for each region/country/area of interest using custom `separate_taxonomy()` function.  This function also cleans column names, and largely cleans up inconsistencies in species names.  The output is a dataframe.
 
-2. Make two vectors, one of names to species and one of names to genus.  Individually send these vectors to the GBIF backbone 
-taxonomy via the custom function get_accepted_taxonomy() to get the accepted taxonomic names.  
+2. Make two vectors, one of names to species and one of names to genus.  Individually send these vectors to the GBIF backbone taxonomy via the custom function `get_accepted_taxonomy()` to get the accepted taxonomic names.  
 
-3. Take species names that only matched at genus level and try to get more info from other databases (**list other databases here)
-for those taxa using custom get_more_info() function.  Also use this function to try and get info for species not found in GBIF. 
+3. Take species names that only matched at genus level and try to get more info from other databases (`dbinfo$title`) for those taxa using custom `get_more_info()` function.  Also use this function to try and get info for species not found in GBIF. 
 
-4. Read in CSV (`genus_only_resolution_FIXED.csv`) of manual fixes to species names, and merge this into the info from GBIF and 
-other databases.  
+4. Read in CSV (`genus_only_resolution_FIXED.csv`) of manual fixes to species names, and merge this into the info from GBIF and other databases.  
 
-5. Combine all accepted taxonomic names into one dataframe.  Add a new column with a unique id as a key (number for 1 to x).  Write 
-dataframe to CSV file. 
+5. Combine all accepted taxonomic names into one dataframe.  Add a new column with a unique id as a key (number for 1 to x).  Write dataframe to CSV file called **taxonomy_table.csv**. 
 
-6. For occurrence table, read in raw data from excel files for each area of interest using the custom separate_occurrence() 
-function. This also cleans up country name and origin columns, and largely cleans up inconsistencies in species names.  
+6. For occurrence table, read in raw data from the raw excel files for each area of interest using the custom `separate_occurrence()` function. This also cleans up country name and origin columns, and largely cleans up inconsistencies in species names.  
 
-7. Join with the taxonomic table to add the unique taxon id column for key.  Write dataframe to CSV file. 
+7. Join with the taxonomic table to add the unique taxon id column for key.  Write dataframe to CSV file called **occurrence_table.csv**. 
 
-8. For attribute table, read in raw data from excel files for each area of interest using custom separate_attributes() function.  This
-function cleans up column names, and largely cleans up inconsistencies in species names.   
+8. For attribute table, read in raw data from excel files for each area of interest using custom `separate_attributes(`) function.  This function cleans up column names, and largely cleans up inconsistencies in species names.   
 
 9. Clean up origin names using regex.  Bring in taxonomic names by joining the taxonomic table.  
 
-10. Bring in origin correspondence table (`origin_correspondence_table.xlsx`) to unify origin column entries.  Bring in non-plant-feeding info (`non-plant-feeding_taxa_updatedOct07.xlsx`) and join with this info in a new column.  Write dataframe to CSV file.  
+10. Bring in origin correspondence table (`origin_correspondence_table.xlsx`) to unify origin column entries.  Bring in non-plant-feeding info (`non-plant-feeding_taxa_updatedOct07.xlsx`) and join with this info in a new column.  Do a custom coalesce using the `coalesce_manual()` funciton.  Write dataframe to CSV file called **attribute_table.csv**.  
 
-11. Create additional attribute table with GBIF-cleaned taxa names included, and filtered to unique GBIF-cleaned taxa name.  
+11. Create additional attribute table with GBIF-cleaned taxa names included, and filtered to unique GBIF-cleaned taxa name. Write dataframe to CSV file called **attribute_table_gbif.csv**. 
+
+12. For taxonomy table with different authorities/taxonomies for Coleoptera and Lepidoptera, read in taxonomy table, read in files with fixes from other authorities, and replace family names etc.  Write dataframe to CSV file called **taxonomy_table_col_lep.csv**.
 
 
 ## Advice on how to bring tables together
-Note: All tables have Taxon ID column, which is unique ID for each cleaned taxa
 
-1. read in taxonomy table and other table of interest such as occurrence table
-2. use a join on taxon_id and/or user_supplied_name to make the tables into one dataframe
+Taxon IDs are not static, but rather change each time the taxonomy table has to be regenerated.  Therefore, it is advisable to join the taxonomy table to either the occurrence or attribute tables by the `genus_species` column using code such as `new_table <- taxonomy_table %>% left_join(occurrence_table, by = "genus_species")`.    
 
 
 ```{r knit, echo=FALSE, message=FALSE, error=FALSE, eval=FALSE, include=FALSE}
