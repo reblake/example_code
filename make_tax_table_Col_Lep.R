@@ -39,6 +39,6 @@ tt_col_lep <- tt_col %>%
 ### Write file                    ###
 #####################################
 # write the clean taxonomy table to a CSV file
-readr::write_csv(tt_col_lep, "nfs_data/data/clean_data/taxonomy_table_coel_lep.csv")
+readr::write_csv(tt_col_lep, "nfs_data/data/clean_data/taxonomy_table_cole_lep.csv")
 
 
