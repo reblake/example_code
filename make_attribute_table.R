@@ -58,6 +58,8 @@ df_attrib <- attrib_list %>%
                     origin = gsub(", , ", ", ", origin),
                     origin = gsub(",, ", ", ", origin) 
                     ) %>% 
+             mutate_at(vars("host_group", "phagy", "pest_type", "ecozone", "phagy_main", "feeding_type", "feeding_main"), 
+                       list(~ replace(., . %in% c("NA", "Na"), NA_character_))) %>%  # make true NAs
              dplyr::rename("user_supplied_name" = "genus_species")  # NOTE: even though changed name to user_supplied_name,
                                                                     # these data have not been run through GBIF!  You still 
                                                                     # must join the attribute table with the taxonomy table!!!
@@ -114,28 +116,21 @@ df_attrib_o <- df_attrib %>%
                       plant_feeding = ifelse((order == "Diptera" & family == "Phoridae" & genus %in% pf_gen), "Y", plant_feeding),
                       plant_feeding = ifelse((order == "Diptera" & family == "Drosophilidae" & user_supplied_name %in% pf_sp), "Y", plant_feeding)
                       ) %>% 
-               # clean up intentional release column
-               # mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-               #                              ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
-               # add column for whether species every introduced anywhere in world
-               # group_by(user_supplied_name) %>% 
-               # mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
-               #                                    ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
-               # ungroup() %>% 
                # remove irrelevant columns
                select(-origin, -country_nm, -nz_region, -order, -family, -genus) %>% 
                # coalesce rows to one per user_supplied_name
                group_split(user_supplied_name) %>% 
                map(~coalesce_manual(.x)) %>%
                bind_rows() %>% 
-               select(-genus_species) %>% 
                # arrange rows and columns
                arrange(user_supplied_name) %>% 
                select(#taxon_id, 
-                      user_supplied_name, plant_feeding, 
+                      user_supplied_name, genus_species,  
                       origin_Nearctic, origin_Neotropic, origin_European_Palearctic, origin_Asian_Palearctic, 
-                      origin_Indomalaya, origin_Afrotropic, origin_Australasia, origin_Oceania, everything())
-
+                      origin_Indomalaya, origin_Afrotropic, origin_Australasia, origin_Oceania, 
+                      plant_feeding, host_type, host_group, phagy, pest_type, ecozone, phagy_main, 
+                      feeding_type, feeding_main, notes
+                      )
 
 #####################################
 ### Write file                    ###
@@ -169,14 +164,6 @@ df_attrib_gbif <- df_attrib %>%
                          plant_feeding = ifelse((order == "Diptera" & family == "Phoridae" & genus %in% pf_gen), "Y", plant_feeding),
                          plant_feeding = ifelse((order == "Diptera" & family == "Drosophilidae" & user_supplied_name %in% pf_sp), "Y", plant_feeding)
                          ) %>% 
-                  # clean up intentional release column
-                  # mutate(intentional_release = ifelse(intentional_release %in% c("N"), "No", 
-                  #                              ifelse(intentional_release %in% c("1", "I"), "Yes", intentional_release))) %>% 
-                  # add column for whether species every introduced anywhere in world
-                  # group_by(user_supplied_name) %>% 
-                  # mutate(ever_introduced_anywhere = ifelse(intentional_release %in% c("Yes", "Eradicated"), "Yes", 
-                  #                                   ifelse(intentional_release %in% c("No"), "No", NA_character_))) %>% 
-                  # ungroup() %>% 
                   # removed irrelevant columns
                   select(-origin, -country_nm, -nz_region, -user_supplied_name, -order, -family, -genus, -notes,
                          -intentional_release) %>% 
@@ -191,12 +178,13 @@ df_attrib_gbif <- df_attrib %>%
                   bind_rows() %>% 
                   # arrange rows and columns
                   arrange(genus_species) %>% 
-                  select(-taxon_id, 
+                  select(#-taxon_id, 
                          genus_species,
                          origin_Nearctic, origin_Neotropic, origin_European_Palearctic, origin_Asian_Palearctic, 
                          origin_Indomalaya, origin_Afrotropic, origin_Australasia, origin_Oceania, plant_feeding, 
-                         #intentional_release, ever_introduced_anywhere, 
-                         everything())
+                         host_type, host_group, phagy, pest_type, ecozone, phagy_main, feeding_type, feeding_main
+                         #intentional_release, ever_introduced_anywhere
+                         )
 
 
 
