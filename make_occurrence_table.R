@@ -102,7 +102,12 @@ occurr_df <- df_occurr %>%
              dplyr::left_join(y = select(tax_table, c(user_supplied_name, taxon_id, genus_species)),
                               by = "user_supplied_name") %>% # join in the taxonomy info
              mutate(genus_species = gsub("<a0>", " ", genus_species, perl=TRUE)) %>% 
-             select(taxon_id, everything()) %>% # make taxon_id column the first column
+             select(taxon_id, user_supplied_name, genus_species, year, region, ecozone,
+                    intentional_release, established_indoors_or_outdoors, confirmed_establishment,
+                    eradicated, present_status, host_type, 
+                    country, country_code, origin, origin_code,
+                    notes
+                    ) %>% # make taxon_id column the first column; arrange other columns
              dplyr::arrange(taxon_id) # order by taxon_id
 
 
