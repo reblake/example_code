@@ -99,9 +99,23 @@ tax_table2 <- tax_table %>%
                     taxonomic_authority = ifelse(user_supplied_name %in% c("Gymnaetron pascuorum", "Gymnetron pascuorum"), NA_character_, taxonomic_authority))
 
 # write the clean taxonomy table to a CSV file
-readr::write_csv(tax_table2, "nfs_data/data/clean_data/taxonomy_table.csv")
+# readr::write_csv(tax_table2, "nfs_data/data/clean_data/taxonomy_table.csv")
 
+###########################################################
+# Prep for data publication, Sept 2021
+# overwrite "genus" column entries for any species-level taxa with the first word from the "genus_species" column
 
+# begin by reading in the taxonomy table, so you have the object tax_table
+tax_table <- read.csv("nfs_data/data/clean_data/tables_initial_publication/taxonomy_table.csv", stringsAsFactors=F)  # read in the taxonomy table
+# head(tax_table)
 
+# do the replacing
+tax_table3 <- tax_table %>% 
+              mutate(genus = ifelse(rank %in% c("genus", "species"), word(genus_species, 1), genus))
+
+# write the clean taxonomy table to a CSV file
+readr::write_csv(tax_table3, "nfs_data/data/clean_data/tables_initial_publication/taxonomy_table.csv")
+               
+              
 
 
