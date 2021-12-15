@@ -117,5 +117,6 @@ tax_table3 <- tax_table %>%
 readr::write_csv(tax_table3, "nfs_data/data/clean_data/tables_initial_publication/taxonomy_table.csv")
                
               
-
+tt2 <- tax_table %>% select(rank, order, family, genus, genus_species) %>% 
+       distinct(genus_species, .keep_all = TRUE)
 
