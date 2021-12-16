@@ -34,6 +34,10 @@ usn_acc <- usn_clean %>%
            mutate(genus_species = str_squish(genus_species)) 
 )
 
+# are the columns the same?
+all(usn_acc$user_supplied_name == usn_acc$genus_species)
+usn_acc[!(usn_acc$user_supplied_name == usn_acc$genus_species), c("user_supplied_name", "genus_species")]
+
 # write out file
 write_csv(usn_acc, "User_Supp_Nm_FIXED.csv")
 
@@ -53,6 +57,10 @@ gs_acc <- gs_clean %>%
           purrr::reduce(full_join) %>%
           mutate(genus_species = str_squish(genus_species)) 
 )
+
+# are the columns the same?
+all(gs_acc$user_supplied_name == gs_acc$genus_species)
+gs_acc[!(gs_acc$user_supplied_name == gs_acc$genus_species), c("user_supplied_name", "genus_species")]
 
 # write out file
 write_csv(gs_acc, "Genus_Sp_FIXED.csv")
