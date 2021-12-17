@@ -45,6 +45,8 @@ write_csv(usn_acc, "User_Supp_Nm_FIXED.csv")
 usn_non_s <- usn_acc %>% 
              filter(!(rank == "species"))
 
+usn_more_info <- lapply(usn_non_s, get_more_info)
+
 # write out file
 
 # run genus_species column back through get_accepted_taxonomy()
