@@ -41,6 +41,17 @@ usn_acc[!(usn_acc$user_supplied_name == usn_acc$genus_species), c("user_supplied
 # write out file
 write_csv(usn_acc, "User_Supp_Nm_FIXED.csv")
 
+# run non-species matches through get_more_info()
+usn_non_s <- usn_acc %>% 
+             filter(!(rank == "species"))
+
+# write out file
+
+# run genus_species column back through get_accepted_taxonomy()
+
+# write out file
+
+##############################################
 
 ##### next do the genus_species column
 gs <- fixed %>% 
@@ -65,3 +76,10 @@ gs_acc[!(gs_acc$user_supplied_name == gs_acc$genus_species), c("user_supplied_na
 # write out file
 write_csv(gs_acc, "Genus_Sp_FIXED.csv")
 
+# run non-species matches through get_more_info()
+
+# write out file
+
+# run genus_species column back through get_accepted_taxonomy()
+
+# write out file
