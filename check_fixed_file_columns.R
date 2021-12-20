@@ -43,15 +43,35 @@ write_csv(usn_acc, "User_Supp_Nm_FIXED.csv")
 
 # run non-species matches through get_more_info()
 usn_non_s <- usn_acc %>% 
-             filter(!(rank == "species"))
+             filter(!(rank == "species")) %>%  # filter to keep rows not id'd to species
+             select(user_supplied_name) %>% 
+             unlist(., use.names = FALSE) 
 
 usn_more_info <- lapply(usn_non_s, get_more_info)
 
-# write out file
+suppressMessages(
+usn_acc_2 <-  usn_more_info %>% 
+              purrr::reduce(full_join) # join all data frames from list
+)
 
-# run genus_species column back through get_accepted_taxonomy()
+# write out file
+write_csv(usn_acc_2, "USN_FIXED_gmi.csv")
+
+# run matched_name2 column back through get_accepted_taxonomy()
+usn_gmi_gs <- usn_acc_2 %>% 
+              filter(!(user_supplied_name == matched_name2)) %>% # filter to keep unmatched rows
+              select(matched_name2) %>% 
+              unlist(., use.names = FALSE)
+
+usn_acctax2 <- lapply(usn_gmi_gs, get_accepted_taxonomy)
+
+suppressMessages(
+usn_acc_3 <- usn_acctax2 %>% 
+             purrr::reduce(full_join) # join all data frames from list
+)
 
 # write out file
+write_csv(usn_acc_3, "USN_FIXED_gmi_gat.csv")
 
 ##############################################
 
@@ -79,9 +99,35 @@ gs_acc[!(gs_acc$user_supplied_name == gs_acc$genus_species), c("user_supplied_na
 write_csv(gs_acc, "Genus_Sp_FIXED.csv")
 
 # run non-species matches through get_more_info()
+gs_non_s <- gs_acc %>% 
+            filter(!(rank == "species")) %>%  # filter to keep rows not id'd to species
+            select(user_supplied_name) %>% # note: user_supplied_name column is the genus_species column from
+                                           # the FIXED file after having gone through GBIF the first time above 
+            unlist(., use.names = FALSE) 
+
+gs_more_info <- lapply(gs_non_s, get_more_info)
+
+suppressMessages(
+gs_acc_2 <- gs_more_info %>%  
+            purrr::reduce(full_join) # join all data frames from list  
+)
 
 # write out file
+write_csv(usn_acc_2, "GS_FIXED_gmi.csv")
 
-# run genus_species column back through get_accepted_taxonomy()
+# run matched_name2 column back through get_accepted_taxonomy()
+gs_gmi_gs <- gs_acc_2 %>% 
+             filter(!(user_supplied_name == matched_name2)) %>% # filter to keep unmatched rows
+             select(matched_name2) %>% 
+             unlist(., use.names = FALSE)
+
+gs_acctax2 <- lapply(gs_gmi_gs, get_accepted_taxonomy)
+
+suppressMessages(
+gs_acc_3 <- gs_acctax2 %>% 
+            purrr::reduce(full_join) # join all data frames from list
+)
 
 # write out file
+write_csv(gs_acc_3, "GS_FIXED_gmi_gat.csv")
+
